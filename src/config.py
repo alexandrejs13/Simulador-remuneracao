@@ -10,26 +10,27 @@ class DataLoader:
     """
 
     def __init__(self):
-        # Converte os defaults em strings JSON (evita erros de cache)
+        # Defaults convertidos em string (para evitar UnhashableParamError)
         default_i18n = json.dumps({"Português": {"sidebar_title": "Carregando..."}})
         default_empty = "{}"
 
-        # Carrega dados
+        # Carregamento dos arquivos
         self.i18n = self._load_json("i18n.json", default_str=default_i18n)
         self.sti_config = self._load_json("sti_config.json", default_str=default_empty)
         self.countries = self._load_json("countries.json", default_str=default_empty)
         self.tables = self._load_json("tables.json", default_str=default_empty)
 
-        # Define atributo auxiliar compatível com versões anteriores
+        # Criação dos atributos usados nas views e cálculos
         self.STI_LEVEL_OPTIONS = self._extract_sti_levels()
+        self.STI_RANGES = self._extract_sti_ranges()
 
     # --------------------------------------------------------------------
-    # Função cacheada — apenas tipos hasháveis
+    # Cache seguro
     # --------------------------------------------------------------------
     @st.cache_data(show_spinner=False)
     def _load_json(_self, filename: str, default_str: str = "{}"):
         """
-        Lê um arquivo JSON em cache seguro, compatível com Streamlit Cloud.
+        Lê arquivo JSON do diretório /data com cache seguro.
         """
         try:
             path = os.path.join("data", filename)
@@ -45,12 +46,12 @@ class DataLoader:
                 return {}
 
     # --------------------------------------------------------------------
-    # Cria atributo STI_LEVEL_OPTIONS dinamicamente
+    # Extrai áreas e níveis do STI (ex: Comercial / Corporativo)
     # --------------------------------------------------------------------
     def _extract_sti_levels(self):
         """
-        Extrai o dicionário de níveis e áreas de STI a partir do sti_config.json.
-        Exemplo esperado de estrutura:
+        Retorna um dicionário de áreas e níveis do sti_config.json.
+        Exemplo:
         {
             "Comercial": {"Analista": 0.10, "Gerente": 0.20},
             "Corporativo": {"Coordenador": 0.15, "Diretor": 0.25}
@@ -58,13 +59,30 @@ class DataLoader:
         """
         if not self.sti_config or not isinstance(self.sti_config, dict):
             return {}
-
-        # Se existir chave 'areas' dentro do JSON, prioriza
         if "areas" in self.sti_config and isinstance(self.sti_config["areas"], dict):
             return self.sti_config["areas"]
-
-        # Caso contrário, retorna todo o JSON (compatibilidade antiga)
         return self.sti_config
+
+    # --------------------------------------------------------------------
+    # Extrai as faixas de STI (mínimo, máximo, target)
+    # --------------------------------------------------------------------
+    def _extract_sti_ranges(self):
+        """
+        Retorna um dicionário com ranges de STI.
+        Exemplo esperado no sti_config.json:
+        {
+            "ranges": {
+                "Comercial": {"min": 0.8, "max": 1.2},
+                "Corporativo": {"min": 0.9, "max": 1.1}
+            }
+        }
+        """
+        if not self.sti_config or not isinstance(self.sti_config, dict):
+            return {}
+        if "ranges" in self.sti_config and isinstance(self.sti_config["ranges"], dict):
+            return self.sti_config["ranges"]
+        # Fallback: se não houver ranges definidos, gera padrão
+        return {area: {"min": 0.8, "max": 1.2} for area in self._extract_sti_levels().keys()}
 
     # --------------------------------------------------------------------
     # Fallback sem cache
@@ -78,13 +96,12 @@ class DataLoader:
 
 
 # ------------------------------------------------------------------------
-# Instância global — acessível via `from src.config import DATA`
+# Instância global — acessível via from src.config import DATA
 # ------------------------------------------------------------------------
 DATA = DataLoader()
 
-
 # ------------------------------------------------------------------------
-# Tetos anuais (para cálculos de contribuições)
+# Tabelas de tetos anuais (compatibilidade com cálculos)
 # ------------------------------------------------------------------------
 ANNUAL_CAPS = {
     "BR": {"INSS": 908.85 * 13, "FGTS": None},
@@ -93,3 +110,4 @@ ANNUAL_CAPS = {
     "CA": {"CPP": 68500, "EI": 63600},
     "MX": {"IMSS": 25 * 365},
 }
+
