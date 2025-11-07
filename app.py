@@ -1,6 +1,16 @@
+import sys
+import os
 import streamlit as st
 import pandas as pd
 import altair as alt
+
+# --- INÍCIO DA CORREÇÃO ---
+# Adiciona o diretório do projeto ao path do Python
+# Isso força o app.py a "enxergar" as pastas 'src' e 'views'
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, ROOT_DIR)
+# --- FIM DA CORREÇÃO ---
+
 from src.config import DATA
 from src.styles import apply_global_styles, card
 from src.utils import fmt_currency, money_or_blank, fmt_percent
@@ -45,7 +55,6 @@ with st.sidebar:
     st.markdown("---")
 
     # Menu Principal (Robusto com .get())
-    # Define os nomes das páginas uma vez para evitar discrepância
     key_sim = T.get('menu_sim', 'Simulador de Remuneração')
     key_comp_paises = T.get('menu_comp_paises', 'Comparativo entre Países')
     key_comp_cost = T.get('menu_comp_cost', 'Comparativo Custo Empregador')
