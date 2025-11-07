@@ -4,7 +4,7 @@ from src.config import DATA
 
 def render_tables_page(T: dict):
     st.title(T.get("menu_tables", "Tabelas de Contribuições"))
-    country = st.selectbox("Selecione o País para visualizar as regras", list(DATA.countries.keys()))
+    country = st.selectbox("Selecione o País", list(DATA.countries.keys()))
     
     st.header(f"{DATA.countries[country].get('flag','')} {country}")
     
@@ -30,10 +30,9 @@ def render_sti_page(T: dict):
     st.title(T.get("menu_sti_rules", "Regras STI"))
     st.markdown("Targets de Bônus por Nível e Área.")
     
-    # --- CORREÇÃO AQUI ---
-    # Acessa DATA.STI_RANGES (carregado pelo config.py)
+    # --- CORREÇÃO (KeyError) ---
     ranges = DATA.STI_RANGES
-    # ---------------------
+    # --- FIM DA CORREÇÃO ---
 
     if not ranges:
         st.error("Arquivo sti_config.json não carregado ou está vazio.")
