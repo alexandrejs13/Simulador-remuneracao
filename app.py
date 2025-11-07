@@ -1,26 +1,42 @@
 import streamlit as st
+import pandas as pd
+import altair as alt
 from src.config import DATA
-from src.styles import apply_global_styles
+from src.styles import apply_global_styles, card
+from src.utils import fmt_currency, money_or_blank, fmt_percent
+from src.calculations import (
+    get_net_salary, get_employer_cost, get_sti_targets
+)
 from views import calculator, comparison, cost_comparison, info
 
 # Configuração Inicial da Página
 st.set_page_config(page_title="Simulador de Remuneração", layout="wide", page_icon="💰")
 apply_global_styles()
 
-# Inicialização de Estado
-if 'locale' not in st.session_state: st.session_state.locale = 'Português'
+# Inicialização de Estado (Define o idioma padrão)
+if 'locale' not in st.session_state: 
+    st.session_state.locale = 'Português'
 
 # --- SIDEBAR DE NAVEGAÇÃO ---
 with st.sidebar:
+    # Carrega o dicionário de tradução (Locale)
+    # Usamos .get() para evitar KeyErrors se o JSON estiver incompleto
+    T = DATA.i18n.get(st.session_state.locale, DATA.i18n.get('Português', {}))
+    
     # Header Sidebar
-    T = DATA.i18n[st.session_state.locale]
-    st.markdown(f"<div style='text-align:center; margin-bottom:20px;'><h2>{T['sidebar_title']}</h2></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; margin-bottom:20px;'><h2>{T.get('sidebar_title', 'Simulador')}</h2></div>", unsafe_allow_html=True)
     
     # Seletor de Idioma
     col_l1, col_l2 = st.columns([0.3, 0.7])
     col_l1.write(f"<div style='margin-top: 15px; font-size: 20px;'>🌐</div>", unsafe_allow_html=True)
-    new_lang = col_l2.selectbox("Language", options=["Português", "English", "Español"], 
-                               index=["Português", "English", "Español"].index(st.session_state.locale), 
+    lang_options = list(DATA.i18n.keys())
+    try:
+        lang_index = lang_options.index(st.session_state.locale)
+    except ValueError:
+        lang_index = 0 # Default para Português se a chave não existir
+        
+    new_lang = col_l2.selectbox("Language", options=lang_options, 
+                               index=lang_index, 
                                label_visibility="collapsed")
     if new_lang != st.session_state.locale:
         st.session_state.locale = new_lang
@@ -28,38 +44,46 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # Menu Principal (Radio customizado para parecer seções)
+    # Menu Principal (Robusto com .get())
+    # Define os nomes das páginas uma vez para evitar discrepância
+    key_sim = T.get('menu_sim', 'Simulador de Remuneração')
+    key_comp_paises = T.get('menu_comp_paises', 'Comparativo entre Países')
+    key_comp_cost = T.get('menu_comp_cost', 'Comparativo Custo Empregador')
+    key_tables = T.get('menu_tables', 'Tabelas de Contribuições')
+    key_sti_rules = T.get('menu_sti_rules', 'Regras de Cálculo do STI')
+
     MENU_OPTIONS = [
-        "📌 " + T['menu_sim'],
-        "🌍 " + T['menu_comp_paises'],
-        "🏢 " + T['menu_comp_cost'],
-        "---", # Separador Lógico
-        "📊 " + T['menu_tables'],
-        "📈 " + T['menu_sti_rules']
+        "📌 " + key_sim,
+        "🌍 " + key_comp_paises,
+        "🏢 " + key_comp_cost,
+        "---", # Separador
+        "📊 " + key_tables,
+        "📈 " + key_sti_rules
     ]
 
-    # Mapeamento reverso para saber qual página chamar
     MENU_MAP = {
-        "📌 " + T['menu_sim']: "calc",
-        "🌍 " + T['menu_comp_paises']: "comp_countries",
-        "🏢 " + T['menu_comp_cost']: "comp_cost",
-        "📊 " + T['menu_tables']: "info_tables",
-        "📈 " + T['menu_sti_rules']: "info_sti"
+        "📌 " + key_sim: "calc_sim",
+        "🌍 " + key_comp_paises: "comp_countries",
+        "🏢 " + key_comp_cost: "comp_cost",
+        "📊 " + key_tables: "info_tables",
+        "📈 " + key_sti_rules: "info_sti"
     }
 
-    selected_label = st.radio("Navegação Principal", MENU_OPTIONS, label_visibility="collapsed")
+    selected_label = st.radio("Navegação Principal", MENU_OPTIONS, label_visibility="collapsed", 
+                              format_func=lambda x: "" if x == "---" else x)
     
-    # Tratamento para separadores (se o usuário clicar neles, nada acontece ou volta pro padrão)
     if selected_label == "---":
-        current_page = "calc"
+        current_page = st.session_state.get('last_page', 'calc_sim') # Mantém a página ou vai pro padrão
     else:
-        current_page = MENU_MAP.get(selected_label, "calc")
+        current_page = MENU_MAP.get(selected_label, "calc_sim")
+        st.session_state.last_page = current_page # Salva a última seleção válida
 
     st.markdown("---")
     st.caption(f"v2025.11.07 | {st.session_state.locale}")
 
 # --- ROTEAMENTO DE VIZUALIZAÇÕES ---
-if current_page == "calc":
+# O 'T' (dicionário de tradução) é passado para cada página
+if current_page == "calc_sim":
     calculator.render_page(T)
 elif current_page == "comp_countries":
     comparison.render_page(T)
