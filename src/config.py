@@ -5,34 +5,32 @@ import streamlit as st
 
 class DataLoader:
     """
-    Classe central de carregamento de arquivos JSON e parâmetros de configuração
-    com cache seguro e compatibilidade total com Streamlit Cloud.
+    Carrega arquivos JSON e mantém cache seguro.
+    Compatível com Streamlit Cloud e Python 3.13.
     """
 
     def __init__(self):
-        # Carrega arquivos de configuração no momento da inicialização
-        self.i18n = self._load_json(
-            "i18n.json",
-            default={"Português": {"sidebar_title": "Carregando..."}}
-        )
-        self.sti_config = self._load_json("sti_config.json", default={})
-        self.countries = self._load_json("countries.json", default={})
-        self.tables = self._load_json("tables.json", default={})
+        # ⚠️ Aqui o default é convertido para JSON string ANTES de ser passado à função cacheada
+        default_i18n = json.dumps({"Português": {"sidebar_title": "Carregando..."}})
+        self.i18n = self._load_json("i18n.json", default_str=default_i18n)
+        self.sti_config = self._load_json("sti_config.json", default_str="{}")
+        self.countries = self._load_json("countries.json", default_str="{}")
+        self.tables = self._load_json("tables.json", default_str="{}")
 
-    # 🔹 Função principal de carregamento com tratamento de erro e fallback
+    # --------------------------------------------------------------
+    # Função cacheada — nunca recebe dicts, apenas strings e nomes
+    # --------------------------------------------------------------
     @st.cache_data(show_spinner=False)
     def _load_json(_self, filename: str, default_str: str = "{}"):
         """
-        Lê um arquivo JSON do diretório 'data' com cache seguro.
-        Parâmetros complexos (como dict) são convertidos em string JSON para evitar erros de hash.
+        Lê o arquivo JSON em cache seguro.
         """
         try:
             path = os.path.join("data", filename)
             if os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
                     return json.load(f)
-
-            # Retorna valor padrão (já convertido em string)
+            # Se arquivo não existir, retorna o default convertido
             return json.loads(default_str)
         except Exception as e:
             st.warning(f"Erro ao carregar {filename}: {e}")
@@ -41,11 +39,10 @@ class DataLoader:
             except Exception:
                 return {}
 
-    # 🔹 Função pública de leitura (sem cache)
+    # --------------------------------------------------------------
+    # Versão sem cache (para testes ou fallback)
+    # --------------------------------------------------------------
     def _load(self, filename: str, default=None):
-        """
-        Carrega um arquivo JSON sem cache (uso eventual, backup).
-        """
         path = os.path.join("data", filename)
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
@@ -53,5 +50,5 @@ class DataLoader:
         return default or {}
 
 
-# ✅ Instância global acessível pelo app
+# Instância global única
 DATA = DataLoader()
