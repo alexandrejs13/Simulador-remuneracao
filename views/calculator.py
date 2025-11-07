@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from src.config import DATA
 from src.calculations import get_net_salary, get_sti_targets
-from src.utils import fmt_currency, money_or_blank
+from src.utils import fmt_money, money_or_blank, INPUT_FORMAT
 from src.styles import card
 
 def render_page(T: dict):
@@ -27,27 +27,26 @@ def render_page(T: dict):
     
     with tab_fixed:
         c1, c2, c3 = st.columns(3)
-        salary = c1.number_input(f"{T.get('salary','Salário')} ({sym})", 0.0, value=10000.0, step=500.0, format="%.2f")
+        salary = c1.number_input(f"{T.get('salary','Salário')} ({sym})", 0.0, value=10000.0, step=500.0, format=INPUT_FORMAT)
         if country == "Brasil":
             dependents = c2.number_input(T.get("dependents", "Dependentes"), 0, value=0, step=1)
-            other_deductions = c3.number_input(f"{T.get('other_deductions','Outras Ded.')} ({sym})", 0.0, step=50.0, format="%.2f")
+            other_deductions = c3.number_input(f"{T.get('other_deductions','Outras Ded.')} ({sym})", 0.0, step=50.0, format=INPUT_FORMAT)
         elif country == "Estados Unidos":
             state_name = c2.selectbox(T.get("state", "Estado"), options=list(DATA.us_rates.keys()))
             state_rate = DATA.us_rates.get(state_name, 0.0)
             c2.caption(f"Taxa: {state_rate*100:.2f}%")
-            other_deductions = c3.number_input(f"{T.get('other_deductions','Outras Ded.')} ({sym})", 0.0, step=50.0, format="%.2f")
+            other_deductions = c3.number_input(f"{T.get('other_deductions','Outras Ded.')} ({sym})", 0.0, step=50.0, format=INPUT_FORMAT)
         else:
-             other_deductions = c2.number_input(f"{T.get('other_deductions','Outras Ded.')} ({sym})", 0.0, step=50.0, format="%.2f")
+             other_deductions = c2.number_input(f"{T.get('other_deductions','Outras Ded.')} ({sym})", 0.0, step=50.0, format=INPUT_FORMAT)
 
     with tab_variable:
         c1, c2 = st.columns(2)
-        bonus = c1.number_input(f"{T.get('bonus','Bônus Anual')} ({sym})", 0.0, step=1000.0, format="%.2f")
+        bonus = c1.number_input(f"{T.get('bonus','Bônus Anual')} ({sym})", 0.0, step=1000.0, format=INPUT_FORMAT)
         
-        # --- CORREÇÃO AQUI ---
-        # Acessa DATA.STI_LEVEL_OPTIONS (carregado pelo config.py)
+        # --- CORREÇÃO (KeyError) ---
         sti_areas = list(DATA.STI_LEVEL_OPTIONS.keys())
-        # ---------------------
-        
+        # --- FIM DA CORREÇÃO ---
+
         area = c2.selectbox(T.get("area", "Área STI"), sti_areas)
         levels = DATA.STI_LEVEL_OPTIONS.get(area, [])
         level = c2.selectbox(T.get("level", "Nível STI"), levels, index=len(levels)-1 if levels else 0)
@@ -74,28 +73,28 @@ def render_page(T: dict):
 
     st.subheader(T.get("monthly_comp_title", "Mensal"))
     c1, c2, c3 = st.columns(3)
-    c1.markdown(card(T.get("tot_earnings", "Proventos"), fmt_currency(res["total_earnings"], sym), "earn"), unsafe_allow_html=True)
-    c2.markdown(card(T.get("tot_deductions", "Descontos"), fmt_currency(res["total_deductions"], sym), "ded"), unsafe_allow_html=True)
-    c3.markdown(card(T.get("net", "Líquido"), fmt_currency(res["net_salary"], sym), "net"), unsafe_allow_html=True)
+    c1.markdown(card(T.get("tot_earnings", "Proventos"), fmt_money(res["total_earnings"], sym), "earn"), unsafe_allow_html=True)
+    c2.markdown(card(T.get("tot_deductions", "Descontos"), fmt_money(res["total_deductions"], sym), "ded"), unsafe_allow_html=True)
+    c3.markdown(card(T.get("net", "Líquido"), fmt_money(res["net_salary"], sym), "net"), unsafe_allow_html=True)
     if country == "Brasil" and res["fgts"] > 0:
-        st.caption(f"💼 {T.get('fgts_deposit', 'FGTS')}: {fmt_currency(res['fgts'], sym)}")
+        st.caption(f"💼 {T.get('fgts_deposit', 'FGTS')}: {fmt_money(res['fgts'], sym)}")
 
     # Tabela de Detalhamento
     rows_html = ""
     for desc, earn, ded in res["lines"]:
         rows_html += f"<tr><td>{desc}</td><td style='color:green;text-align:right;'>{money_or_blank(earn, sym)}</td><td style='color:red;text-align:right;'>{money_or_blank(ded, sym)}</td></tr>"
     
-    st.markdown(f\"\"\"
+    st.markdown(f"""
     <table class="styled-table">
         <thead><tr><th>{T.get("rules_table_desc", "Descrição")}</th><th>{T.get("earnings", "Proventos")}</th><th>{T.get("deductions", "Descontos")}</th></tr></thead>
         <tbody>{rows_html}</tbody>
     </table>
-    \"\"\", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
     st.divider()
     st.subheader(T.get("annual_comp_title", "Anual"))
     annual_total = (salary * months) + bonus
     ac1, ac2, ac3 = st.columns(3)
-    ac1.metric(T.get("annual_salary", "Sal. Anual"), fmt_currency(annual_sal, sym), help=f"{months} meses")
-    ac2.metric(T.get("annual_bonus", "Bônus"), fmt_currency(bonus, sym))
-    ac3.metric(T.get("annual_total", "Total"), fmt_currency(annual_total, sym))
+    ac1.metric(T.get("annual_salary", "Sal. Anual"), fmt_money(annual_sal, sym), help=f"{months} meses")
+    ac2.metric(T.get("annual_bonus", "Bônus"), fmt_money(bonus, sym))
+    ac3.metric(T.get("annual_total", "Total"), fmt_money(annual_total, sym))
