@@ -12,7 +12,7 @@
     "salary": "Salário Bruto",
     "dependents": "Dependentes (IR)",
     "other_deductions": "Outras Deduções",
-    "state": "Estado",
+    "state": "Estado (EUA)",
     "bonus": "Bônus Anual",
     "area": "Área (STI)",
     "level": "Nível (STI)",
@@ -30,7 +30,8 @@
     "annual_comp_title": "Visão Anual",
     "annual_salary": "Salário Anual",
     "annual_bonus": "Bônus Anual",
-    "annual_total": "Remuneração Total"
+    "annual_total": "Remuneração Total",
+    "rules_table_desc": "Descrição"
   },
   "English": {
     "sidebar_title": "Compensation Simulator<br><span style='font-size: 14px; font-weight: 400;'>Americas Region</span>",
@@ -45,7 +46,7 @@
     "salary": "Gross Salary",
     "dependents": "Dependents (Tax)",
     "other_deductions": "Other Deductions",
-    "state": "State",
+    "state": "State (USA)",
     "bonus": "Annual Bonus",
     "area": "Area (STI)",
     "level": "Level (STI)",
@@ -63,12 +64,13 @@
     "annual_comp_title": "Annual Overview",
     "annual_salary": "Annual Salary",
     "annual_bonus": "Annual Bonus",
-    "annual_total": "Total Compensation"
+    "annual_total": "Total Compensation",
+    "rules_table_desc": "Description"
   },
   "Español": {
     "sidebar_title": "Simulador de Remuneración<br><span style='font-size: 14px; font-weight: 400;'>Región Américas</span>",
     "language_title": "🌐 Idioma",
-    "menu_sim": "Simulador de Remuneración",
+    "menu_sim": "Simulador de Remuneração",
     "menu_comp_paises": "Comparativo entre Países",
     "menu_comp_cost": "Comparativo Costo Empleador",
     "menu_tables": "Tablas de Contribuciones",
@@ -78,7 +80,7 @@
     "salary": "Salario Bruto",
     "dependents": "Dependientes (Impuesto)",
     "other_deductions": "Otras Deducciones",
-    "state": "Estado",
+    "state": "Estado (EE. UU.)",
     "bonus": "Bono Anual",
     "area": "Área (STI)",
     "level": "Nivel (STI)",
@@ -90,12 +92,13 @@
     "tot_deductions": "Total Descuentos",
     "net": "Salario Neto",
     "fgts_deposit": "Depósito de FGTS",
-    "monthly_comp_title": "Remuneración Mensual",
+    "monthly_comp_title": "Remuneración Mensal",
     "earnings": "Ingresos",
     "deductions": "Descuentos",
     "annual_comp_title": "Visión Anual",
     "annual_salary": "Salario Anual",
     "annual_bonus": "Bono Anual",
-    "annual_total": "Remuneración Total"
+    "annual_total": "Remuneración Total",
+    "rules_table_desc": "Descripción"
   }
 }
