@@ -1,0 +1,65 @@
+{
+  "Brasil": {
+    "symbol": "R$",
+    "flag": "🇧🇷",
+    "valid_from": "2025-01-01",
+    "benefits": {
+      "ferias": true,
+      "decimo": true
+    }
+  },
+  "México": {
+    "symbol": "MX$",
+    "flag": "🇲🇽",
+    "valid_from": "2025-01-01",
+    "benefits": {
+      "ferias": true,
+      "decimo": true
+    }
+  },
+  "Chile": {
+    "symbol": "CLP$",
+    "flag": "🇨🇱",
+    "valid_from": "2025-01-01",
+    "benefits": {
+      "ferias": true,
+      "decimo": false
+    }
+  },
+  "Argentina": {
+    "symbol": "ARS$",
+    "flag": "🇦🇷",
+    "valid_from": "2025-06-01",
+    "benefits": {
+      "ferias": true,
+      "decimo": true
+    }
+  },
+  "Colômbia": {
+    "symbol": "COP$",
+    "flag": "🇨🇴",
+    "valid_from": "2025-01-01",
+    "benefits": {
+      "ferias": true,
+      "decimo": true
+    }
+  },
+  "Estados Unidos": {
+    "symbol": "US$",
+    "flag": "🇺🇸",
+    "valid_from": "2025-01-01",
+    "benefits": {
+      "ferias": false,
+      "decimo": false
+    }
+  },
+  "Canadá": {
+    "symbol": "CAD$",
+    "flag": "🇨🇦",
+    "valid_from": "2025-01-01",
+    "benefits": {
+      "ferias": false,
+      "decimo": false
+    }
+  }
+}
