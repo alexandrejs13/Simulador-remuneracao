@@ -2,6 +2,10 @@ import os
 import json
 import streamlit as st
 
+# Calcula o diretório base do projeto (diretório pai de 'src')
+# Isso é feito no nível do módulo para que __file__ funcione corretamente
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 class DataLoader:
     """
@@ -36,9 +40,8 @@ class DataLoader:
         Lê arquivo JSON do diretório /data com cache seguro.
         """
         try:
-            # Usa caminho absoluto baseado na localização deste arquivo
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            path = os.path.join(base_dir, "data", filename)
+            # Usa o diretório base calculado no nível do módulo
+            path = os.path.join(_BASE_DIR, "data", filename)
             if os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
                     return json.load(f)
@@ -93,9 +96,8 @@ class DataLoader:
     # Fallback sem cache
     # --------------------------------------------------------------------
     def _load(self, filename: str, default=None):
-        # Usa caminho absoluto baseado na localização deste arquivo
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        path = os.path.join(base_dir, "data", filename)
+        # Usa o diretório base calculado no nível do módulo
+        path = os.path.join(_BASE_DIR, "data", filename)
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
