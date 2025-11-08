@@ -2,6 +2,10 @@ import os
 import json
 import streamlit as st
 
+# Calcula o diretório base do projeto (diretório pai de 'src')
+# Isso é feito no nível do módulo para que __file__ funcione corretamente
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 class DataLoader:
     """
@@ -18,7 +22,10 @@ class DataLoader:
         self.i18n = self._load_json("i18n.json", default_str=default_i18n)
         self.sti_config = self._load_json("sti_config.json", default_str=default_empty)
         self.countries = self._load_json("countries.json", default_str=default_empty)
-        self.tables = self._load_json("tables.json", default_str=default_empty)
+        self.country_tables = self._load_json("country_tables.json", default_str=default_empty)
+        self.us_rates = self._load_json("us_state_tax_rates.json", default_str=default_empty)
+        self.br_inss = self._load_json("br_inss.json", default_str=default_empty)
+        self.br_irrf = self._load_json("br_irrf.json", default_str=default_empty)
 
         # Criação dos atributos usados nas views e cálculos
         self.STI_LEVEL_OPTIONS = self._extract_sti_levels()
@@ -33,7 +40,8 @@ class DataLoader:
         Lê arquivo JSON do diretório /data com cache seguro.
         """
         try:
-            path = os.path.join("data", filename)
+            # Usa o diretório base calculado no nível do módulo
+            path = os.path.join(_BASE_DIR, "data", filename)
             if os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
                     return json.load(f)
@@ -53,12 +61,16 @@ class DataLoader:
         Retorna um dicionário de áreas e níveis do sti_config.json.
         Exemplo:
         {
-            "Comercial": {"Analista": 0.10, "Gerente": 0.20},
-            "Corporativo": {"Coordenador": 0.15, "Diretor": 0.25}
+            "Non Sales": ["CEO", "Members of the GEB", ...],
+            "Sales": ["Executive Manager / Senior Group Manager", ...]
         }
         """
         if not self.sti_config or not isinstance(self.sti_config, dict):
             return {}
+        # Busca por "STI_LEVEL_OPTIONS" primeiro (novo formato)
+        if "STI_LEVEL_OPTIONS" in self.sti_config and isinstance(self.sti_config["STI_LEVEL_OPTIONS"], dict):
+            return self.sti_config["STI_LEVEL_OPTIONS"]
+        # Fallback para "areas" (formato antigo)
         if "areas" in self.sti_config and isinstance(self.sti_config["areas"], dict):
             return self.sti_config["areas"]
         return self.sti_config
@@ -71,14 +83,16 @@ class DataLoader:
         Retorna um dicionário com ranges de STI.
         Exemplo esperado no sti_config.json:
         {
-            "ranges": {
-                "Comercial": {"min": 0.8, "max": 1.2},
-                "Corporativo": {"min": 0.9, "max": 1.1}
-            }
+            "Non Sales": {"CEO": [1.00, 1.00], ...},
+            "Sales": {"Executive Manager / Senior Group Manager": [0.45, 0.70], ...}
         }
         """
         if not self.sti_config or not isinstance(self.sti_config, dict):
             return {}
+        # Busca por "STI_RANGES" primeiro (novo formato)
+        if "STI_RANGES" in self.sti_config and isinstance(self.sti_config["STI_RANGES"], dict):
+            return self.sti_config["STI_RANGES"]
+        # Fallback para "ranges" (formato antigo)
         if "ranges" in self.sti_config and isinstance(self.sti_config["ranges"], dict):
             return self.sti_config["ranges"]
         # Fallback: se não houver ranges definidos, gera padrão
@@ -88,7 +102,8 @@ class DataLoader:
     # Fallback sem cache
     # --------------------------------------------------------------------
     def _load(self, filename: str, default=None):
-        path = os.path.join("data", filename)
+        # Usa o diretório base calculado no nível do módulo
+        path = os.path.join(_BASE_DIR, "data", filename)
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
