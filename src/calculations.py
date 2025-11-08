@@ -48,7 +48,7 @@ def calculate_br_net(salary: float, dependents: int, other_deductions: float,
 
 # --- CÁLCULOS EUA (REGRA DETALHADA) ---
 def calculate_us_net(salary: float, other_deductions: float, state_rate: float, state_name: str) -> Dict:
-    ss_tax = min(salary, ANNUAL_CAPS["US_FICA"] / 12.0) * 0.062
+    ss_tax = min(salary, ANNUAL_CAPS["US"]["FICA_SS"] / 12.0) * 0.062
     med_tax = salary * 0.0145
     state_tax_val = salary * state_rate
     
@@ -70,7 +70,7 @@ def calculate_generic_net(country: str, salary: float, other_deductions: float) 
     for tax_name, rate in rates.items():
         val = salary * rate
         # Adicionar exceções de teto aqui
-        if country == "México" and "IMSS" in tax_name: val = min(salary, ANNUAL_CAPS["MX_UMA_MONTHLY"]) * rate
+        if country == "México" and "IMSS" in tax_name: val = min(salary, ANNUAL_CAPS["MX"]["IMSS"]) * rate
         
         lines.append((tax_name, 0.0, val))
         total_ded += val
