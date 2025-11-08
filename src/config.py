@@ -18,7 +18,16 @@ class DataLoader:
         self.i18n = self._load_json("i18n.json", default_str=default_i18n)
         self.sti_config = self._load_json("sti_config.json", default_str=default_empty)
         self.countries = self._load_json("countries.json", default_str=default_empty)
-        self.tables = self._load_json("tables.json", default_str=default_empty)
+        self.us_rates = self._load_json("us_state_tax_rates.json", default_str=default_empty)
+        self.br_inss = self._load_json("br_inss.json", default_str=default_empty)
+        self.br_irrf = self._load_json("br_irrf.json", default_str=default_empty)
+        # Carrega country_tables.json (arquivo real) e cria alias para compatibilidade
+        self.tables = self._load_json("country_tables.json", default_str=default_empty)
+        self.country_tables = self.tables  # Alias para compatibilidade retroativa
+        
+        # Validação: verifica se REMUN_MONTHS está presente
+        if "REMUN_MONTHS" not in self.tables:
+            st.warning("⚠️ Chave 'REMUN_MONTHS' não encontrada em country_tables.json. Usando valores padrão.")
 
         # Criação dos atributos usados nas views e cálculos
         self.STI_LEVEL_OPTIONS = self._extract_sti_levels()

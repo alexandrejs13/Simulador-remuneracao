@@ -47,9 +47,16 @@ def render_page(T: dict):
         sti_areas = list(DATA.STI_LEVEL_OPTIONS.keys())
         # --- FIM DA CORREÇÃO ---
 
-        area = c2.selectbox(T.get("area", "Área STI"), sti_areas)
+        # Proteção adicional: garante que sti_areas não está vazio
+        if not sti_areas:
+            sti_areas = ["Sem áreas disponíveis"]
+        
+        area = c2.selectbox(T.get("area", "Área STI"), sti_areas, key="calc_sti_area_select")
         levels = DATA.STI_LEVEL_OPTIONS.get(area, [])
-        level = c2.selectbox(T.get("level", "Nível STI"), levels, index=len(levels)-1 if levels else 0)
+        # Proteção adicional: garante que levels não está vazio
+        if not levels:
+            levels = ["Sem níveis disponíveis"]
+        level = c2.selectbox(T.get("level", "Nível STI"), levels, index=len(levels)-1 if levels else 0, key="calc_sti_level_select")
 
         c_chk1, c_chk2 = st.columns(2)
         incide_medias = False
@@ -57,7 +64,26 @@ def render_page(T: dict):
             incide_medias = c_chk1.checkbox(T.get("lbl_incide_medias", "Incide Médias?"), value=False)
         
         sti_min, sti_max = get_sti_targets(area, level)
-        months = DATA.country_tables["REMUN_MONTHS"].get(country, 12.0)
+        # Acesso seguro com fallback: tenta DATA.tables primeiro, depois DATA.country_tables
+        remun_months_data = None
+        if hasattr(DATA, 'tables') and isinstance(DATA.tables, dict):
+            remun_months_data = DATA.tables.get("REMUN_MONTHS", {})
+        elif hasattr(DATA, 'country_tables') and isinstance(DATA.country_tables, dict):
+            remun_months_data = DATA.country_tables.get("REMUN_MONTHS", {})
+        
+        # Obtém o valor de months para o país, garantindo que seja int >= 1
+        if remun_months_data and country in remun_months_data:
+            try:
+                months = int(remun_months_data[country])
+                if months < 1:
+                    st.warning(f"⚠️ Valor inválido de meses para {country}: {months}. Usando 12.")
+                    months = 12
+            except (ValueError, TypeError):
+                st.warning(f"⚠️ Valor de meses inválido para {country}. Usando 12.")
+                months = 12
+        else:
+            months = 12  # Valor padrão se não encontrar
+        
         annual_sal = salary * months
         actual_sti = (bonus / annual_sal) if annual_sal > 0 else 0.0
         in_target = (sti_min <= actual_sti <= sti_max) if level != "Others" else (actual_sti <= sti_max)
