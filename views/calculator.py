@@ -32,7 +32,7 @@ def render_page(T: dict):
             dependents = c2.number_input(T.get("dependents", "Dependentes"), 0, value=0, step=1)
             other_deductions = c3.number_input(f"{T.get('other_deductions','Outras Ded.')} ({sym})", 0.0, step=50.0, format=INPUT_FORMAT)
         elif country == "Estados Unidos":
-            state_name = c2.selectbox(T.get("state", "Estado"), options=list(DATA.us_rates.keys()))
+            state_name = c2.selectbox(T.get("state", "Estado"), options=list(DATA.us_rates.keys()), key='us_state_sel')
             state_rate = DATA.us_rates.get(state_name, 0.0)
             c2.caption(f"Taxa: {state_rate*100:.2f}%")
             other_deductions = c3.number_input(f"{T.get('other_deductions','Outras Ded.')} ({sym})", 0.0, step=50.0, format=INPUT_FORMAT)
@@ -47,9 +47,9 @@ def render_page(T: dict):
         sti_areas = list(DATA.STI_LEVEL_OPTIONS.keys())
         # --- FIM DA CORREÇÃO ---
 
-        area = c2.selectbox(T.get("area", "Área STI"), sti_areas)
+        area = c2.selectbox(T.get("area", "Área STI"), sti_areas, key='sti_area_sel')
         levels = DATA.STI_LEVEL_OPTIONS.get(area, [])
-        level = c2.selectbox(T.get("level", "Nível STI"), levels, index=len(levels)-1 if levels else 0)
+        level = c2.selectbox(T.get("level", "Nível STI"), levels, index=len(levels)-1 if levels else 0, key='sti_level_sel')
 
         c_chk1, c_chk2 = st.columns(2)
         incide_medias = False
@@ -57,7 +57,23 @@ def render_page(T: dict):
             incide_medias = c_chk1.checkbox(T.get("lbl_incide_medias", "Incide Médias?"), value=False)
         
         sti_min, sti_max = get_sti_targets(area, level)
-        months = DATA.country_tables["REMUN_MONTHS"].get(country, 12.0)
+        
+        # Safe access to REMUN_MONTHS with fallback and validation
+        raw_months = None
+        if hasattr(DATA, 'tables') and isinstance(DATA.tables, dict):
+            raw_months = DATA.tables.get('REMUN_MONTHS', {}).get(country)
+        if raw_months is None and hasattr(DATA, 'country_tables') and isinstance(DATA.country_tables, dict):
+            raw_months = DATA.country_tables.get('REMUN_MONTHS', {}).get(country)
+        
+        # Normalize to integer >= 1
+        try:
+            months = int(raw_months)
+            if months < 1:
+                raise ValueError()
+        except Exception:
+            months = 12
+            st.warning(f"Chave REMUN_MONTHS ausente ou inválida para {country}. Usando {months} meses como padrão.")
+        
         annual_sal = salary * months
         actual_sti = (bonus / annual_sal) if annual_sal > 0 else 0.0
         in_target = (sti_min <= actual_sti <= sti_max) if level != "Others" else (actual_sti <= sti_max)
