@@ -18,7 +18,32 @@ class DataLoader:
         self.i18n = self._load_json("i18n.json", default_str=default_i18n)
         self.sti_config = self._load_json("sti_config.json", default_str=default_empty)
         self.countries = self._load_json("countries.json", default_str=default_empty)
-        self.tables = self._load_json("tables.json", default_str=default_empty)
+        self.tables = self._load_json("country_tables.json", default_str=default_empty)
+        
+        # Alias para compatibilidade (country_tables -> tables)
+        self.country_tables = self.tables
+        
+        # Carrega taxas de impostos dos estados dos EUA
+        self.us_rates = self._load_json("us_state_tax_rates.json", default_str=default_empty)
+        
+        # Carrega tabelas fiscais do Brasil (para cálculos)
+        self.br_inss = self._load_json("br_inss.json", default_str=default_empty)
+        self.br_irrf = self._load_json("br_irrf.json", default_str=default_empty)
+        
+        # Validação de REMUN_MONTHS com warning caso ausente ou inválido
+        try:
+            if isinstance(self.tables, dict) and "REMUN_MONTHS" not in self.tables:
+                try:
+                    st.warning("⚠️ REMUN_MONTHS não encontrado em country_tables.json. Usando valores padrão.")
+                except Exception:
+                    pass  # Streamlit UI não disponível durante import
+            elif not isinstance(self.tables, dict):
+                try:
+                    st.warning("⚠️ country_tables.json não é um dicionário válido. Usando valores padrão.")
+                except Exception:
+                    pass  # Streamlit UI não disponível durante import
+        except Exception:
+            pass  # Falha silenciosa se ocorrer erro durante validação
 
         # Criação dos atributos usados nas views e cálculos
         self.STI_LEVEL_OPTIONS = self._extract_sti_levels()
