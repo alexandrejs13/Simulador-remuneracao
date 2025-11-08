@@ -61,12 +61,16 @@ class DataLoader:
         Retorna um dicionário de áreas e níveis do sti_config.json.
         Exemplo:
         {
-            "Comercial": {"Analista": 0.10, "Gerente": 0.20},
-            "Corporativo": {"Coordenador": 0.15, "Diretor": 0.25}
+            "Non Sales": ["CEO", "Members of the GEB", ...],
+            "Sales": ["Executive Manager / Senior Group Manager", ...]
         }
         """
         if not self.sti_config or not isinstance(self.sti_config, dict):
             return {}
+        # Busca por "STI_LEVEL_OPTIONS" primeiro (novo formato)
+        if "STI_LEVEL_OPTIONS" in self.sti_config and isinstance(self.sti_config["STI_LEVEL_OPTIONS"], dict):
+            return self.sti_config["STI_LEVEL_OPTIONS"]
+        # Fallback para "areas" (formato antigo)
         if "areas" in self.sti_config and isinstance(self.sti_config["areas"], dict):
             return self.sti_config["areas"]
         return self.sti_config
@@ -79,14 +83,16 @@ class DataLoader:
         Retorna um dicionário com ranges de STI.
         Exemplo esperado no sti_config.json:
         {
-            "ranges": {
-                "Comercial": {"min": 0.8, "max": 1.2},
-                "Corporativo": {"min": 0.9, "max": 1.1}
-            }
+            "Non Sales": {"CEO": [1.00, 1.00], ...},
+            "Sales": {"Executive Manager / Senior Group Manager": [0.45, 0.70], ...}
         }
         """
         if not self.sti_config or not isinstance(self.sti_config, dict):
             return {}
+        # Busca por "STI_RANGES" primeiro (novo formato)
+        if "STI_RANGES" in self.sti_config and isinstance(self.sti_config["STI_RANGES"], dict):
+            return self.sti_config["STI_RANGES"]
+        # Fallback para "ranges" (formato antigo)
         if "ranges" in self.sti_config and isinstance(self.sti_config["ranges"], dict):
             return self.sti_config["ranges"]
         # Fallback: se não houver ranges definidos, gera padrão
