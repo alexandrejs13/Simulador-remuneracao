@@ -36,7 +36,9 @@ class DataLoader:
         Lê arquivo JSON do diretório /data com cache seguro.
         """
         try:
-            path = os.path.join("data", filename)
+            # Usa caminho absoluto baseado na localização deste arquivo
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            path = os.path.join(base_dir, "data", filename)
             if os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
                     return json.load(f)
@@ -91,7 +93,9 @@ class DataLoader:
     # Fallback sem cache
     # --------------------------------------------------------------------
     def _load(self, filename: str, default=None):
-        path = os.path.join("data", filename)
+        # Usa caminho absoluto baseado na localização deste arquivo
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(base_dir, "data", filename)
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
